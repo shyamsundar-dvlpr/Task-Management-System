@@ -1,0 +1,225 @@
+<div class="tasks-page">
+  <div class="page-header">
+    <div class="search-term">
+      <input
+      type="text"
+      class="form-input"
+      placeholder="Search tasks..."
+      [value]="searchTerm"
+      (input) = "onSearch($any($event.target).value)"
+      >
+    </div>
+    <div class="header-content">
+      <h1 class="page-title">{{ showAllTasks ? 'All Tasks' : 'My Tasks' }}</h1>
+      <p class="page-subtitle">{{ showAllTasks ? 'View all tasks in the system' : 'Manage and track your assigned tasks' }}</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn--secondary" (click)="toggleView()" >
+        {{ showAllTasks ? 'Show My Tasks' : 'Show All Tasks' }}
+      </button>
+      <button class="btn btn--primary" (click)="createTask()" >
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Create Task
+      </button>
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <span class="stat-value">{{ taskService.tasks().length }}</span>
+      <span class="stat-label">Total Tasks</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value stat-value--pending">{{ pendingCount() }}</span>
+      <span class="stat-label">Pending</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value stat-value--completed">{{ completedCount() }}</span>
+      <span class="stat-label">Completed</span>
+    </div>
+  </div>
+
+  @if (taskService.loading()) {
+    <div class="loading-state">
+      <div class="loading-spinner"></div>
+      <span>Loading your tasks...</span>
+    </div>
+  }
+
+  @if (!taskService.loading()) {
+    <div class="task-list">
+    @for (task of taskService.tasks(); track task.id) {
+      <div class="task-card" [class.task-card--completed]="task.status === 'Completed'">
+      <div class="task-card__icon">
+        @if (task.status === 'Pending') {
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        }
+        @if (task.status === 'Completed') {
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        }
+      </div>
+      <div class="task-card__content">
+        <span class="task-card__title">{{ task.title }}</span>
+        <span class="task-badge" [ngClass]="task.status === 'Pending' ? 'task-badge--pending' : 'task-badge--completed'">
+          {{ task.status }}
+        </span>
+        <span class="task-badge task-badge--priority task-badge--{{ task.priority.toLowerCase() }}">
+          {{ task.priority }}
+        </span>
+        @if (task.dueDate) {
+          <span class="task-card__due">Due: {{ task.dueDate | date:'mediumDate' }}</span>
+        }
+      </div>
+      <div class="task-card__actions">
+        <button class="btn btn--secondary btn--sm" (click)="openEditModal(task)" title="Edit">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+          Edit
+        </button>
+        @if (task.status === 'Pending') {
+          <button class="btn btn--success btn--sm" (click)="complete(task.id)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Complete
+          </button>
+        }
+        <button class="btn btn--danger btn--sm" (click)="delete(task.id)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          Delete
+        </button>
+      </div>
+    </div>
+    }
+
+    @if (taskService.tasks().length === 0) {
+      <div class="empty-state">
+      <div class="empty-state__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+      </div>
+      <h3 class="empty-state__title">No tasks yet</h3>
+      <p class="empty-state__text">You don't have any tasks assigned to you.</p>
+      </div>
+    }
+  </div>
+  }
+  @if (showAllTasks && totalPages() > 1) {
+      <div class="pagination">
+         <button class="btn btn--secondary btn--sm" (click)="prevPage()" [disabled]="currentPage() === 1">
+               &laquo; Prev
+           </button>
+      <span class="pagination__info">
+               Page {{ currentPage() }} of {{ totalPages() }}
+           </span>
+           <button class="btn btn--secondary btn--sm" (click)="nextPage()" [disabled]="currentPage() === totalPages()">
+             Next &raquo;
+           </button>
+    </div>
+  }
+</div>
+
+<app-confirm-dialog
+  [isOpen]="showDeleteDialog"
+  title="Delete Task"
+  message="Are you sure you want to delete this task? This action cannot be undone."
+  confirmText="Delete"
+  cancelText="Cancel"
+  (confirmed)="confirmDelete()"
+  (cancelled)="cancelDelete()">
+</app-confirm-dialog>
+
+<!-- Edit Task Modal -->
+@if (showEditModal()) {
+<div class="modal-overlay" (click)="closeEditModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal__header">
+      <h2 class="modal__title">Edit Task</h2>
+      <button class="modal__close" (click)="closeEditModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    
+    <form class="modal__form" [formGroup]="editForm" (ngSubmit)="submitEdit()">
+      <div class="form-group">
+        <label class="form-label" for="title">Title</label>
+        <input class="form-input" id="title" type="text" placeholder="Enter title" formControlName="title" />
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label" for="description">Description</label>
+        <textarea class="form-input form-textarea" id="description" placeholder="Enter description" formControlName="description"></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label" for="assignedUserId">Assign to User</label>
+        <select class="form-input form-select" id="assignedUserId" formControlName="assignedUserId">
+          <option [ngValue]="null" disabled>Select a user</option>
+          @for (user of users(); track user.id) {
+            <option [ngValue]="user.id">
+              {{ user.name }} ({{ user.role }})
+            </option>
+          }
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label" for="status">Status</label>
+        <select class="form-input form-select" id="status" formControlName="status">
+          <option value="Pending">Pending</option>
+          <option value="Completed">Completed</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="priority">Priority</label>
+        <select class="form-input form-select" id="priority" formControlName="priority">
+          <option value="Low">Low</option>
+          <option value="Medium">Medium</option>
+          <option value="High">High</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="dueDate">Due Date</label>
+        <input class="form-input" id="dueDate" type="date" formControlName="dueDate" />
+      </div>
+      
+      <div class="modal__actions">
+        <button class="btn btn--secondary" type="button" (click)="closeEditModal()">Cancel</button>
+        <button class="btn btn--primary" type="submit" [disabled]="editForm.invalid || submitting()">
+          {{ submitting() ? 'Updating...' : 'Update Task' }}
+        </button>
+      </div>
+      
+      @if (editMessage) {
+        <p class="modal__message" [class.modal__message--success]="editMessage.includes('success')">
+          {{ editMessage }}
+        </p>
+      }
+    </form>
+  </div>
+</div>
+}

@@ -1,0 +1,195 @@
+<div class="users-page">
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">User Management</h1>
+      <p class="page-subtitle">Manage system users and their roles</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn--primary" (click)="openModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="8.5" cy="7" r="4"></circle>
+          <line x1="20" y1="8" x2="20" y2="14"></line>
+          <line x1="23" y1="11" x2="17" y2="11"></line>
+        </svg>
+        Add User
+      </button>
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <span class="stat-value">{{ totalUsers() }}</span>
+      <span class="stat-label">Total Users</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value stat-value--admin">{{ adminCount() }}</span>
+      <span class="stat-label">Admins</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value stat-value--user">{{ userCount() }}</span>
+      <span class="stat-label">Users</span>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="search-bar">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" placeholder="Search users by name..." [value]="searchTerm" (input)="onSearch($any($event.target).value)" class="search-input">
+    </div>
+    <div class="role-filter">
+      <select class="form-input form-select" [(ngModel)]="selectedRole" (ngModelChange)="onRoleFilterChange($event)">
+        <option value="">All Roles</option>
+        <option value="Admin">Admin</option>
+        <option value="User">User</option>
+      </select>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state">
+    <div class="loading-spinner"></div>
+    <span>Loading users...</span>
+  </div>}
+
+  @if (!loading()) {
+    <div class="user-list">
+    @for (user of users(); track user.id) {
+      <div class="user-card">
+      <div class="user-card__avatar">
+        <span>{{ user.name.charAt(0)?.toUpperCase() || 'U' }}</span>
+      </div>
+      <div class="user-card__info">
+        <span class="user-card__name">{{ user.name }}</span>
+        <span class="user-card__id">ID: {{ user.id }}</span>
+      </div>
+      <span class="role-badge" [ngClass]="getRoleBadgeClass(user.role)">
+        {{ user.role }}
+      </span>
+      <div class="user-card__actions">
+        <button class="btn btn--secondary btn--sm" title="Edit" (click)="openEditModal(user)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+        </button>
+        <button class="btn btn--danger btn--sm" (click)="deleteUser(user.id)" title="Delete">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+    }
+
+    @if (users().length === 0) {
+      <div class="empty-state">
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+      </svg>
+      <h3>No users found</h3>
+      <p>{{ searchTerm ? 'Try adjusting your search' : 'Add your first user to get started' }}</p>
+      </div>
+    }
+  </div>
+
+  <!-- Pagination -->
+  @if (usePagination()) {
+    <div class="pagination">
+      <span class="pagination__info">Page {{ currentPage() }} of {{ totalPages() || 1 }} ({{ totalUsers() }} users)</span>
+      
+      <button class="pagination__btn" (click)="prevPage()" [disabled]="currentPage() <= 1">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        Prev
+      </button>
+      
+      @if (totalPages() > 1) {
+        <div class="pagination__pages">
+          @for (page of [].constructor(totalPages()); track $index) {
+            <button class="pagination__page" [class.pagination__page--active]="currentPage() === $index + 1" (click)="goToPage($index + 1)">
+              {{ $index + 1 }}
+            </button>
+          }
+        </div>
+      }
+      
+      <button class="pagination__btn" (click)="nextPage()" [disabled]="currentPage() >= totalPages()">
+        Next
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+    </div>
+  }
+  }
+</div>
+
+<app-confirm-dialog
+  [isOpen]="showDeleteDialog"
+  title="Delete User"
+  message="Are you sure you want to delete this user? This action cannot be undone."
+  confirmText="Delete"
+  cancelText="Cancel"
+  (confirmed)="confirmDelete()"
+  (cancelled)="cancelDelete()">
+</app-confirm-dialog>
+
+<!-- Create User Modal -->
+@if (showModal()) {
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal__header">
+      <h2 class="modal__title">{{ isEditMode() ? 'Edit User' : 'Create User' }}</h2>
+      <button class="modal__close" (click)="closeModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    
+    <form class="modal__form" [formGroup]="userForm" (ngSubmit)="submitForm()">
+      <div class="form-group">
+        <label class="form-label" for="name">Name</label>
+        <input class="form-input" id="name" type="text" placeholder="Enter name" formControlName="name" />
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <input class="form-input" id="password" type="password" 
+          [placeholder]="isEditMode() ? 'Leave blank to keep current password' : 'Enter password'" 
+          formControlName="password" />
+        @if (isEditMode()) {
+          <span class="form-hint">Optional - only fill to change password</span>
+        }
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label" for="role">Role</label>
+        <select class="form-input form-select" id="role" formControlName="role">
+          <option value="User">User</option>
+          <option value="Admin">Admin</option>
+        </select>
+      </div>
+      
+      <div class="modal__actions">
+        <button class="btn btn--secondary" type="button" (click)="closeModal()">Cancel</button>
+        <button class="btn btn--primary" type="submit" [disabled]="userForm.invalid || submitting()">
+          {{ submitting() ? (isEditMode() ? 'Updating...' : 'Creating...') : (isEditMode() ? 'Update User' : 'Create User') }}
+        </button>
+      </div>
+      
+      @if (modalMessage) {
+        <p class="modal__message" [class.modal__message--success]="modalMessage.includes('success')">
+          {{ modalMessage }}
+        </p>
+      }
+    </form>
+  </div>
+</div>
+}

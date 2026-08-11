@@ -1,0 +1,36 @@
+<div class="create-task-page">
+  <div class="create-task-card">
+    <h2 class="create-task-card__title">Create Task</h2>
+
+    <form class="task-form" [formGroup]="form" (ngSubmit)="create()">
+      <div class="form-group">
+        <label class="form-label" for="title">Title</label>
+        <input class="form-input" id="title" type="text" placeholder="Enter task title" formControlName="title" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="description">Description</label>
+        <input class="form-input" id="description" type="text" placeholder="Enter description" formControlName="description" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="userId">Assign to User</label>
+        <select class="form-input form-select" id="userId" formControlName="assignedUserId">
+          <option [ngValue]="null" disabled>Select a user</option>
+          @for (user of users(); track user.id) {
+            <option [ngValue]="user.id">
+              {{ user.name }} ({{ user.role }})
+            </option>
+          }
+        </select>
+        @if (loadingUsers()) {
+          <span class="form-hint">Loading users...</span>
+        }
+      </div>
+      <div class="button-group">
+        <button class="btn btn--primary" type="submit">Create Task</button>
+        <button class="btn btn--secondary" type="button" (click)="goBack()">Back to Tasks</button>
+      </div>
+    </form>
+
+    <p class="success-message">{{ message }}</p>
+  </div>
+</div>
