@@ -29,7 +29,7 @@
 
   <div class="stats-bar">
     <div class="stat-item">
-      <span class="stat-value">{{ taskService.tasks().length }}</span>
+      <span class="stat-value">{{ totalTasks() }}</span>
       <span class="stat-label">Total Tasks</span>
     </div>
     <div class="stat-item">
@@ -72,7 +72,7 @@
         <span class="task-badge" [ngClass]="task.status === 'Pending' ? 'task-badge--pending' : 'task-badge--completed'">
           {{ task.status }}
         </span>
-        <span class="task-badge task-badge--priority task-badge--{{ task.priority.toLowerCase() }}">
+        <span class="task-badge task-badge--priority task-badge--{{ priorityClass(task.priority) }}">
           {{ task.priority }}
         </span>
         @if (task.dueDate) {
@@ -106,7 +106,7 @@
     </div>
     }
 
-    @if (taskService.tasks().length === 0) {
+    @if (totalTasks() === 0) {
       <div class="empty-state">
       <div class="empty-state__icon">
         <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

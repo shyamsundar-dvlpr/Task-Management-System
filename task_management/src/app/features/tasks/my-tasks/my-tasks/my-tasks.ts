@@ -1,4 +1,5 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { TaskService } from '../../../../core/services/task.service';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -41,7 +42,8 @@ export class MyTasks {
     public authService: AuthService,
     private userService: UserService,
     private fb: FormBuilder,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly destroyRef : DestroyRef
   ) {
     this.editForm = this.fb.group({
       title: ['', Validators.required],
@@ -67,19 +69,14 @@ export class MyTasks {
 
     this.searchSubject.pipe(
       debounceTime(300),
-      switchMap(term => {
-        this.taskService.loading.set(true);
-        return this.taskService.getTasksPage(this.currentPage(), this.pageSize(), term);
-      })
+      switchMap(term => this.taskService.loadTasksPage(this.currentPage(), this.pageSize(), term)),
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe({
-      next: (res) => {
-        this.taskService.tasks.set(res.items);
-        this.totalTasks.set(res.total);
+      next: (total) => {
+        this.totalTasks.set(total);
         this.currentPage.set(1);
-        this.taskService.loading.set(false);
-      },
-      error: () => this.taskService.loading.set(false)
-    })
+      }
+    });
   }
 
   loadUsers() {
@@ -89,17 +86,11 @@ export class MyTasks {
     });
   }
 
-  loadTasksPage( page: number = 1) {
+  loadTasksPage(page: number = 1) {
     this.currentPage.set(page);
-    this.taskService.loading.set(true);
-    this.taskService.getTasksPage(page, this.pageSize(), this.searchTerm).subscribe({
-      next: (res) => {
-        this.taskService.tasks.set(res.items);
-        this.totalTasks.set(res.total);
-        this.taskService.loading.set(false);
-      },
-      error: () => this.taskService.loading.set(false)
-    })
+    this.taskService.loadTasksPage(page, this.pageSize(), this.searchTerm).subscribe({
+      next: (total) => this.totalTasks.set(total)
+    });
   }
   onSearch(term: string) {
     this.searchTerm = term;
@@ -202,5 +193,9 @@ export class MyTasks {
 
   createTask() {
     this.router.navigate(['/create-task']);
+  }
+
+  priorityClass(priority: unknown): string {
+    return typeof priority === 'string' ? priority.toLowerCase() : 'low';
   }
 }

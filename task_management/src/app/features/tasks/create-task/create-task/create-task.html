@@ -25,6 +25,18 @@
           <span class="form-hint">Loading users...</span>
         }
       </div>
+      <div class="form-group">
+        <label class="form-label" for="priority">Priority</label>
+        <select class="form-input form-select" id="priority" formControlName="priority">
+          <option value="Low">Low</option>
+          <option value="Medium">Medium</option>
+          <option value="High">High</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="dueDate">Due Date</label>
+        <input class="form-input" id="dueDate" type="date" formControlName="dueDate" />
+      </div>
       <div class="button-group">
         <button class="btn btn--primary" type="submit">Create Task</button>
         <button class="btn btn--secondary" type="button" (click)="goBack()">Back to Tasks</button>

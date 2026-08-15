@@ -17,7 +17,7 @@ export class AuthService {
   user = this._user.asReadonly();
   isLoggedIn = computed(() => !!this._user());
   role = computed(() => this._user()?.role);
-  username = computed(() => this._user()?.unique_name || this._user()?.unique_name || 'User');
+  username = computed(() => this._user()?.unique_name || 'User');
 
   constructor(private http: HttpClient) {
     this.loadUserFromToken();
@@ -52,10 +52,18 @@ export class AuthService {
   }
 
   private loadUserFromToken() {
+    try{
     const token = localStorage.getItem('accessToken');
     if (!token) return;
     const decoded = jwtDecode<JwtPayload>(token);
+    if(decoded.exp>Date.now()/1000){
     this._user.set(decoded);
+    }
+  }
+  catch{
+    localStorage.removeItem('accessToken');
+    console.error("Invalid token");
+  }
   }
 
   refreshTokens() {

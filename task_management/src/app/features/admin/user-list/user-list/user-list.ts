@@ -1,10 +1,11 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, inject, DestroyRef } from '@angular/core';
 import { UserService } from '../../../../core/services/user.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UpdateUser, User } from '../../../../core/models/user.model';
 import { debounceTime, Subject, switchMap } from 'rxjs';
 import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-user-list',
@@ -42,7 +43,10 @@ export class UserList {
   adminCount = computed(() => this.users().filter(u => u.role === 'Admin').length);
   userCount = computed(() => this.users().filter(u => u.role === 'User').length);
 
-  constructor(private userService: UserService, private fb: FormBuilder) {
+  constructor(private userService: UserService, 
+    private fb: FormBuilder,
+    private readonly destroyRef : DestroyRef
+  ) {
     this.userForm = this.fb.group({
       name: ['', Validators.required],
       password: ['', [Validators.required, Validators.minLength(6)]],
@@ -58,7 +62,8 @@ export class UserList {
       switchMap(term => {
         this.loading.set(true);
         return this.userService.getUsersPages(this.currentPage(),this.pageSize(),term);
-      })
+      }),
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       next: (res) => {
         this.users.set(res.items);

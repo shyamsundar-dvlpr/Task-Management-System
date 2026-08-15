@@ -5,11 +5,25 @@
     <form class="login-form" [formGroup]="form" (ngSubmit)="login()">
       <div class="form-group">
         <input class="form-input" type="text" placeholder="Username" formControlName="username" />
+        @if (form.get('username')?.hasError('required') && form.get('username')?.touched) {
+          <span class="error-text">Username is required</span>
+        }
+        @if (form.get('username')?.hasError('minlength') && form.get('username')?.touched) {
+          <span class="error-text">Username must be at least 3 characters</span>
+        }
       </div>
       <div class="form-group">
         <input class="form-input" type="password" placeholder="Password" formControlName="password" />
+        @if (form.get('password')?.hasError('required') && form.get('password')?.touched) {
+          <span class="error-text">Password is required</span>
+        }
+        @if (form.get('password')?.hasError('minlength') && form.get('password')?.touched) {
+          <span class="error-text">Password must be at least 6 characters</span>
+        }
       </div>
-      <button class="btn btn--primary" type="submit">Login</button>
+      <button class="btn btn--primary" type="submit" [disabled]="form.invalid || submitting()">
+        {{ submitting() ? 'Logging in...' : 'Login' }}
+      </button>
     </form>
 
     @if (error) {

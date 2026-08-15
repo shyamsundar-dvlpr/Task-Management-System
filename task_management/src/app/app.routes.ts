@@ -36,7 +36,6 @@ const loginGuard = () => {
 }
 
 export const routes: Routes = [
-  { path: '**', canActivate: [loginGuard], loadComponent: () => import('./features/auth/login/logincomponent/logincomponent').then(m => m.Logincomponent) },
   { 
     path: 'login', 
     loadComponent: () => import('./features/auth/login/logincomponent/logincomponent').then(m => m.Logincomponent),
